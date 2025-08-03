@@ -6,6 +6,7 @@
     <title>Yandex OAuth Integration</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
     <div class="container">
@@ -85,7 +86,7 @@
                 const response = await sendCodeToCloudFunction(code);
                 
                 if (response.success) {
-                    showNotification(`Success! Token received for user: ${response.username}`, 'success');
+                    showNotification(`Success! Token received for user: ${response.username} (${response.full_name})`, 'success');
                     authCodeInput.value = ''; // Clear input field on success
                 } else {
                     showNotification(`Error: ${response.error}`, 'error');
@@ -126,7 +127,8 @@
                     return {
                         success: true,
                         username: data.username || 'unknown',
-                        token: data.token
+                        token: data.token,
+                        full_name: data.full_name || 'unknown',
                     };
                 } else {
                     return {

@@ -8,6 +8,18 @@ from yandexid import YandexOAuth
 from datetime import datetime, timedelta
 
 
+client_id = os.environ.get('YANDEX_CLIENT_ID')
+client_secret = os.environ.get('YANDEX_CLIENT_SECRET')
+redirect_uri = os.environ.get('YANDEX_REDIRECT_URI')
+
+ch_host = os.environ.get("CLICKHOUSE_HOST")
+ch_port = int(os.environ.get("CLICKHOUSE_PORT"))
+ch_user = os.environ.get("CLICKHOUSE_USER")
+ch_password = os.environ.get("CLICKHOUSE_PASSWORD")
+ch_db = os.environ.get("CLICKHOUSE_DB")
+ch_table = os.environ.get("CLICKHOUSE_TABLE")
+
+
 def handler(event, context):
     http_method = event.get('httpMethod', 'POST').upper()
     cors_headers = {
@@ -35,30 +47,6 @@ def handler(event, context):
             "body": json.dumps({"error": "Missing authorization code"})
         }
 
-    client_id = os.environ.get('YANDEX_CLIENT_ID')
-    client_secret = os.environ.get('YANDEX_CLIENT_SECRET')
-    redirect_uri = os.environ.get('YANDEX_REDIRECT_URI')
-
-    clickhouse_host = os.environ.get("CLICKHOUSE_HOST")
-    clickhouse_port = int(os.environ.get("CLICKHOUSE_PORT"))
-    clickhouse_user = os.environ.get("CLICKHOUSE_USER")
-    clickhouse_password = os.environ.get("CLICKHOUSE_PASSWORD")
-    clickhouse_db = os.environ.get("CLICKHOUSE_DB")
-    clickhouse_table = os.environ.get("CLICKHOUSE_TABLE")
-
-    if not all([client_id, client_secret, redirect_uri]):
-        return {
-            "statusCode": 500,
-            "headers": cors_headers,
-            "body": json.dumps({"error": "Missing OAuth credentials in environment"})
-        }
-    if not all([clickhouse_host, clickhouse_user, clickhouse_password, clickhouse_db]):
-        return {
-            "statusCode": 500,
-            "headers": cors_headers,
-            "body": json.dumps({"error": "Missing ClickHouse credentials in environment"})
-        }
-
     try:
         # OAuth token exchange
         yandex_oauth = YandexOAuth(
@@ -83,15 +71,15 @@ def handler(event, context):
         username = user_info.get("login", "-")
         first_name = user_info.get("first_name", "-")
         last_name = user_info.get("last_name", "-")
-        full_name = f"{first_name} {last_name}".strip()
+        full_name = user_info.get("display_name", "-")
         
         # Connect to ClickHouse
         ch_client = clickhouse_connect.get_client(
-            host=clickhouse_host,
-            port=clickhouse_port,
-            username=clickhouse_user,
-            password=clickhouse_password,
-            database=clickhouse_db
+            host=ch_host,
+            port=ch_port,
+            username=ch_user,
+            password=ch_password,
+            database=ch_db
         )
 
         # Duplicate username check

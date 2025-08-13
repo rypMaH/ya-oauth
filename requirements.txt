@@ -1,0 +1,4 @@
+clickhouse-connect>=0.6.0
+requests>=2.28.0
+python-dotenv>=1.0.0
+yandexid>=0.3.1

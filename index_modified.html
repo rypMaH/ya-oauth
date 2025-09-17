@@ -107,7 +107,7 @@
         // Function to send code to Yandex Cloud Function
         async function sendCodeToCloudFunction(code) {
             try {
-                const response = await fetch('https://n8n.riddler.pro/webhook/yandex-oauth', {
+                const response = await fetch('https://n8n.riddler.digital/webhook/yandex-oauth', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

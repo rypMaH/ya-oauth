@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yandex Auth (GitHub Pages)</title>
+    <title>Yandex Auth Connector</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -13,97 +13,74 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-gray-50 text-slate-800 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden fade-in border border-gray-100">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden fade-in border border-slate-200">
         
         <!-- Header -->
-        <div class="bg-black p-6 text-white flex justify-between items-center">
-            <div>
-                <h1 class="font-bold text-xl flex items-center gap-2">
-                    <i class="fab fa-github"></i>
-                    <span>GitHub Pages ➜ n8n</span>
-                </h1>
-                <p class="text-xs text-gray-400 mt-1">Автоматический режим (Implicit Flow)</p>
-            </div>
+        <div class="bg-yellow-300 p-6 text-black text-center">
+            <h1 class="font-bold text-xl flex items-center justify-center gap-2">
+                <i class="fab fa-yandex text-red-600 bg-white rounded-full px-1.5 py-0.5 text-sm"></i>
+                <span>Yandex OAuth Connector</span>
+            </h1>
         </div>
 
-        <div class="p-6">
+        <div class="p-8">
             
-            <!-- STEP 1: CONFIGURATION -->
-            <div id="step-config">
-                <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6 text-xs text-blue-800">
-                    <p class="font-bold mb-1"><i class="fas fa-info-circle"></i> Настройка Яндекс ID:</p>
-                    <p>Скопируйте этот адрес и вставьте его в поле <b>Redirect URI</b> в настройках вашего приложения на oauth.yandex.ru:</p>
-                    <div class="mt-2 bg-white p-2 rounded border border-blue-200 font-mono select-all cursor-pointer break-all" onclick="app.copyUri()">
-                        <span id="detected-uri">...</span>
-                        <i class="fas fa-copy float-right text-gray-400 mt-0.5 ml-2"></i>
-                    </div>
-                </div>
+            <!-- STEP 1: LOGIN BUTTON -->
+            <div id="step-start" class="text-center">
+                <p class="text-sm text-gray-600 mb-6">
+                    Нажмите, чтобы авторизоваться через Яндекс и отправить данные в систему.
+                </p>
 
-                <div class="space-y-4 mb-6">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Yandex Client ID</label>
-                        <input type="text" id="client-id" value="513f041567bc4b46a9780a675bb88d5e" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-black outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">n8n Webhook URL</label>
-                        <input type="url" id="webhook-url" placeholder="https://..." class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-black outline-none transition">
-                    </div>
-                </div>
-
-                <button onclick="app.login()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-red-500/20 transition flex items-center justify-center gap-2 transform active:scale-95">
-                    <i class="fab fa-yandex"></i>
+                <button onclick="app.login()" class="w-full bg-yellow-300 hover:bg-yellow-400 text-black font-bold py-4 px-6 rounded-xl shadow-lg shadow-yellow-500/20 transition transform active:scale-95 flex items-center justify-center gap-3">
+                    <i class="fab fa-yandex text-xl"></i>
                     <span>Войти через Яндекс</span>
                 </button>
-                
-                <p class="text-[10px] text-center text-gray-400 mt-4">
-                    После входа вы автоматически вернетесь сюда,<br>и токен отправится в n8n.
-                </p>
             </div>
 
             <!-- STEP 2: PROCESSING -->
-            <div id="step-loading" class="hidden text-center py-10">
-                <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-red-600 mb-4"></div>
-                <h3 class="font-semibold text-gray-700" id="loading-text">Обработка...</h3>
+            <div id="step-loading" class="hidden text-center py-4">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-red-600 mb-4"></div>
+                <h3 class="font-bold text-lg text-slate-800" id="loading-title">Обработка</h3>
+                <p class="text-sm text-slate-500" id="loading-text">Связь с сервером...</p>
             </div>
 
             <!-- STEP 3: SUCCESS -->
-            <div id="step-success" class="hidden">
-                <div class="bg-green-50 border border-green-200 rounded-xl p-5 mb-4 text-center">
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 text-green-600">
-                        <i class="fas fa-check text-xl"></i>
+            <div id="step-success" class="hidden text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
+                    <i class="fas fa-check text-2xl"></i>
+                </div>
+                <h3 class="font-bold text-green-800 text-xl mb-2">Успешно!</h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    Токен и данные профиля отправлены в n8n.
+                </p>
+
+                <div class="bg-slate-50 rounded-lg p-4 text-left text-xs font-mono border border-slate-200 mb-6">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-400">User:</span>
+                        <span id="res-login" class="font-bold text-slate-700">...</span>
                     </div>
-                    <h3 class="font-bold text-green-800 text-lg">Готово!</h3>
-                    <p class="text-sm text-green-700 mt-1">Данные успешно отправлены в n8n</p>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Token:</span>
+                        <span class="text-blue-600">Отправлен</span>
+                    </div>
                 </div>
 
-                <div class="bg-gray-50 rounded-lg p-4 text-xs font-mono space-y-2 border border-gray-200">
-                    <div class="flex justify-between border-b border-gray-200 pb-2">
-                        <span class="text-gray-400">Пользователь</span>
-                        <span id="res-login" class="font-bold text-gray-700">...</span>
-                    </div>
-                    <div class="flex justify-between pt-1">
-                        <span class="text-gray-400">Токен</span>
-                        <span id="res-token" class="text-blue-600 truncate max-w-[150px]">...</span>
-                    </div>
-                </div>
-
-                <button onclick="app.reset()" class="mt-6 w-full border border-gray-300 text-gray-600 font-medium py-2 rounded-lg hover:bg-gray-50 transition">
+                <button onclick="app.reset()" class="w-full border border-slate-300 text-slate-600 font-medium py-2 rounded-lg hover:bg-slate-50 transition text-sm">
                     Вернуться назад
                 </button>
             </div>
 
             <!-- STEP 4: ERROR -->
-            <div id="step-error" class="hidden">
-                <div class="bg-red-50 border border-red-200 rounded-xl p-5 mb-4 text-center">
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 text-red-600">
-                        <i class="fas fa-times text-xl"></i>
-                    </div>
-                    <h3 class="font-bold text-red-800">Ошибка</h3>
-                    <p id="error-msg" class="text-sm text-red-700 mt-2">...</p>
+            <div id="step-error" class="hidden text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+                    <i class="fas fa-times text-2xl"></i>
                 </div>
-                <button onclick="app.reset()" class="w-full bg-black text-white font-medium py-2 rounded-lg hover:bg-gray-800 transition">
+                <h3 class="font-bold text-red-800 text-xl mb-2">Ошибка</h3>
+                <p id="error-msg" class="text-sm text-red-600 bg-red-50 p-3 rounded-lg mb-6 break-words">...</p>
+                
+                <button onclick="app.reset()" class="w-full bg-slate-800 text-white font-medium py-2 rounded-lg hover:bg-slate-900 transition">
                     Попробовать снова
                 </button>
             </div>
@@ -112,24 +89,19 @@
     </div>
 
     <script>
+        // КОНФИГУРАЦИЯ
+        const CONFIG = {
+            clientId: '513f041567bc4b46a9780a675bb88d5e',
+            webhookUrl: 'https://n8n.riddler.digital/webhook-test/yandex-oauth'
+        };
+
         const app = {
-            // Динамически определяем текущий URL страницы (без хэша)
-            // Это то, что нужно вставить в Яндекс.
+            // Динамически определяем текущий URL (Redirect URI)
+            // Это позволяет работать и локально, и на GitHub Pages без смены кода
             currentUri: window.location.href.split('#')[0],
 
             init() {
-                // Отображаем текущий URL для пользователя
-                document.getElementById('detected-uri').textContent = this.currentUri;
-
-                // Загружаем сохраненные данные
-                const storedId = localStorage.getItem('ya_client_id');
-                const storedWebhook = localStorage.getItem('n8n_webhook');
-                
-                // Предзаполняем, если есть. Если нет - используем ваш ID по умолчанию
-                if (storedId) document.getElementById('client-id').value = storedId;
-                if (storedWebhook) document.getElementById('webhook-url').value = storedWebhook;
-
-                // ПРОВЕРКА: Вернулся ли пользователь с токеном?
+                // Проверяем, вернулся ли пользователь с токеном
                 const hash = window.location.hash;
                 if (hash && hash.includes('access_token')) {
                     this.handleCallback(hash);
@@ -137,83 +109,71 @@
             },
 
             login() {
-                const clientId = document.getElementById('client-id').value.trim();
-                const webhookUrl = document.getElementById('webhook-url').value.trim();
+                // Формируем URL для авторизации (Implicit Flow)
+                const authUrl = `https://oauth.yandex.ru/authorize?` + 
+                    `response_type=token` + 
+                    `&client_id=${CONFIG.clientId}` + 
+                    `&redirect_uri=${encodeURIComponent(this.currentUri)}`;
 
-                if (!clientId || !webhookUrl) {
-                    alert('Заполните все поля (Client ID и Webhook URL)!');
-                    return;
-                }
-
-                // Сохраняем настройки
-                localStorage.setItem('ya_client_id', clientId);
-                localStorage.setItem('n8n_webhook', webhookUrl);
-
-                // Формируем ссылку авторизации
-                // response_type=token -> Implicit Flow (сразу токен в URL)
-                const authUrl = `https://oauth.yandex.ru/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(this.currentUri)}`;
-
-                // Редирект
                 window.location.href = authUrl;
             },
 
             async handleCallback(hash) {
                 this.showStep('loading');
                 
-                // 1. Парсим токен из URL
+                // 1. Извлекаем токен из URL
                 const params = new URLSearchParams(hash.substring(1));
                 const accessToken = params.get('access_token');
                 
-                // Чистим URL от токена (чтобы не висел в браузере)
+                // Очищаем адресную строку
                 window.history.replaceState(null, null, this.currentUri);
 
                 if (!accessToken) {
-                    this.showError('Токен не найден');
+                    this.showError('Токен авторизации не найден.');
                     return;
                 }
 
                 try {
-                    // 2. Получаем данные профиля (проверка токена)
-                    document.getElementById('loading-text').innerText = 'Получение профиля...';
+                    // 2. Получаем данные профиля от Яндекса
+                    this.setLoadingStatus('Профиль...', 'Получаем данные пользователя');
+                    
                     const userRes = await fetch('https://login.yandex.ru/info?format=json', {
                         headers: { 'Authorization': `OAuth ${accessToken}` }
                     });
 
-                    if (!userRes.ok) throw new Error('Ошибка API Яндекса (Профиль)');
+                    if (!userRes.ok) throw new Error('Ошибка получения профиля (API Яндекса)');
                     const userInfo = await userRes.json();
 
-                    // 3. Отправляем на Webhook
-                    document.getElementById('loading-text').innerText = 'Отправка в n8n...';
-                    await this.sendToN8n(accessToken, userInfo);
+                    // 3. Отправляем всё на Webhook
+                    this.setLoadingStatus('Отправка...', 'Передаем данные в n8n');
+                    await this.sendToWebhook(accessToken, userInfo);
 
                 } catch (error) {
                     this.showError(error.message);
                 }
             },
 
-            async sendToN8n(token, userInfo) {
-                const webhookUrl = document.getElementById('webhook-url').value || localStorage.getItem('n8n_webhook');
-                
+            async sendToWebhook(token, userInfo) {
                 const payload = {
-                    source: 'github_pages_auth',
+                    source: 'yandex_oauth_app',
                     timestamp: new Date().toISOString(),
                     auth: { access_token: token },
                     user: userInfo
                 };
 
                 try {
-                    // Используем no-cors как fallback, чтобы не ломать UI, если сервер не настроен
-                    // Но сначала пробуем обычный запрос
+                    // Пытаемся отправить данные
+                    // Используем no-cors как fallback, чтобы не пугать пользователя ошибками консоли,
+                    // если n8n не настроен на отправку CORS заголовков.
                     try {
-                         await fetch(webhookUrl, {
+                        await fetch(CONFIG.webhookUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
-                    } catch (corsErr) {
-                        console.warn("Попытка отправки no-cors из-за ошибки:", corsErr);
-                        // Fallback для n8n без настройки заголовков
-                         await fetch(webhookUrl, {
+                    } catch (corsError) {
+                        console.warn('Стандартный fetch не прошел, пробуем no-cors mode', corsError);
+                        await fetch(CONFIG.webhookUrl, {
                             method: 'POST',
                             mode: 'no-cors',
                             headers: { 'Content-Type': 'application/json' },
@@ -223,34 +183,33 @@
 
                     // Успех
                     document.getElementById('res-login').textContent = userInfo.login;
-                    document.getElementById('res-token').textContent = token;
                     this.showStep('success');
+
                 } catch (e) {
                     console.error(e);
-                    this.showError('Ошибка отправки вебхука. Проверьте консоль.');
+                    this.showError('Не удалось отправить данные на Webhook.');
                 }
             },
 
-            copyUri() {
-                const text = document.getElementById('detected-uri').textContent;
-                navigator.clipboard.writeText(text);
-                alert('URL скопирован! Вставьте его в настройки Яндекс ID (Redirect URI).');
+            setLoadingStatus(title, text) {
+                document.getElementById('loading-title').textContent = title;
+                document.getElementById('loading-text').textContent = text;
             },
 
-            showStep(step) {
-                ['config', 'loading', 'success', 'error'].forEach(s => 
-                    document.getElementById(`step-${s}`).classList.add('hidden')
-                );
-                document.getElementById(`step-${step}`).classList.remove('hidden');
+            showStep(stepName) {
+                ['start', 'loading', 'success', 'error'].forEach(step => {
+                    document.getElementById(`step-${step}`).classList.add('hidden');
+                });
+                document.getElementById(`step-${stepName}`).classList.remove('hidden');
             },
 
             showError(msg) {
-                document.getElementById('error-msg').innerText = msg;
+                document.getElementById('error-msg').textContent = msg;
                 this.showStep('error');
             },
 
             reset() {
-                this.showStep('config');
+                this.showStep('start');
             }
         };
 

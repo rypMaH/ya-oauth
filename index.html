@@ -63,7 +63,7 @@
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-400">Token:</span>
-                        <span id="token" class="text-blue-700">...</span>
+                        <span id="res-token" class="font-bold text-blue-700">...</span>
                     </div>
                 </div>
 
@@ -183,6 +183,7 @@
 
                     // Успех
                     document.getElementById('res-login').textContent = userInfo.login;
+                    document.getElementById('res-token').textContent = token;
                     this.showStep('success');
 
                 } catch (e) {

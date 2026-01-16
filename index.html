@@ -13,9 +13,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<div class="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden fade-in border border-slate-200">
-
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden fade-in border border-slate-200">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden fade-in border border-slate-200">
         
         <!-- Header -->
         <div class="bg-yellow-300 p-6 text-black text-center">
@@ -56,14 +55,14 @@
                     Токен и данные профиля отправлены в систему.
                 </p>
 
-                <div class="bg-slate-50 rounded-lg p-4 text-left text-sm font-mono border border-slate-200 mb-6">
+                <div class="bg-slate-50 rounded-lg p-4 text-left text-xs font-mono border border-slate-200 mb-6">
                     <div class="flex justify-between mb-2">
                         <span class="text-gray-400">User:</span>
-                        <span id="res-login" class="font-semibold text-slate-700">...</span>
+                        <span id="res-login" class="font-bold text-slate-700">...</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-400">Token:</span>
-                        <span id="res-token" class="font-semibold text-blue-700">...</span>
+                        <span id="res-token" class="font-bold text-blue-700">...</span>
                     </div>
                 </div>
 

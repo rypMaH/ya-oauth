@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yandex API Token Handler</title>
+    <style>
+        :root {
+            --color-primary: #1a1a1a;
+            --color-secondary: #404040;
+            --color-background: #f5f5f5;
+            --color-surface: #ffffff;
+            --color-text: #1a1a1a;
+            --color-text-secondary: #666666;
+            --color-success: #4caf50;
+            --color-error: #f44336;
+            --color-warning: #ff9800;
+            --color-info: #2196f3;
+            --color-border: #e0e0e0;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --radius: 8px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.5;
+            color: var(--color-text);
+            background-color: var(--color-background);
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-lg);
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: var(--space-xl);
+        }
+
+        .header {
+            margin-bottom: var(--space-xl);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+            color: var(--color-primary);
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-md);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: var(--space-md);
+        }
+
+        .status-badge.authenticated {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--color-success);
+            border: 1px solid var(--color-success);
+        }
+
+        .status-badge.unauthenticated {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--color-error);
+            border: 1px solid var(--color-error);
+        }
+
+        .section {
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-secondary);
+            margin-bottom: var(--space-md);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: var(--space-md);
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--color-text);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px var(--space-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--color-text);
+            background-color: var(--color-background);
+            transition: border-color 200ms ease, box-shadow 200ms ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
+        }
+
+        .form-group input:disabled {
+            background-color: var(--color-border);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px var(--space-md);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 200ms ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-secondary);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-background);
+            color: var(--color-primary);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--color-border);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: var(--space-md);
+            border-radius: var(--radius);
+            margin-bottom: var(--space-md);
+            font-size: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-md);
+            animation: slideIn 300ms ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            font-size: 18px;
+            margin-top: 2px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--color-success);
+            border-left: 4px solid var(--color-success);
+        }
+
+        .alert-error {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--color-error);
+            border-left: 4px solid var(--color-error);
+        }
+
+        .alert-warning {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: var(--color-warning);
+            border-left: 4px solid var(--color-warning);
+        }
+
+        .alert-info {
+            background-color: rgba(33, 150, 243, 0.1);
+            color: var(--color-info);
+            border-left: 4px solid var(--color-info);
+        }
+
+        .token-display {
+            background-color: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: var(--space-md);
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: var(--color-text-secondary);
+            position: relative;
+            margin-bottom: var(--space-md);
+        }
+
+        .token-display-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            padding: 4px 8px;
+            background-color: var(--color-secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background-color 200ms ease;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--color-primary);
+        }
+
+        .status-list {
+            list-style: none;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .status-list li {
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-list li::before {
+            content: '●';
+            color: var(--color-text-secondary);
+        }
+
+        .status-list li.success::before {
+            color: var(--color-success);
+        }
+
+        .status-list li.error::before {
+            color: var(--color-error);
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: var(--space-lg);
+        }
+
+        .loading-state .spinner {
+            width: 24px;
+            height: 24px;
+            margin-bottom: var(--space-md);
+        }
+
+        .loading-state p {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: var(--space-md);
+            }
+
+            .container {
+                padding: var(--space-lg);
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Yandex API Token</h1>
+            <p>Secure authentication and token management</p>
+            <div class="status-badge unauthenticated" id="statusBadge">
+                Not Authenticated
+            </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <!-- Authentication Section -->
+        <div class="section">
+            <div class="section-title">Authentication Flow</div>
+            <div class="form-group">
+                <label for="clientId">Client ID (read-only)</label>
+                <input 
+                    type="text" 
+                    id="clientId" 
+                    value="513f041567bc4b46a9780a675bb88d5e" 
+                    readonly
+                    disabled
+                >
+            </div>
+            <div class="form-group">
+                <label for="redirectUri">Redirect URI</label>
+                <input 
+                    type="text" 
+                    id="redirectUri" 
+                    readonly
+                    disabled
+                >
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="authBtn" onclick="startAuth()">
+                    <span>Sign In with Yandex</span>
+                </button>
+                <button class="btn-secondary" id="handleCallbackBtn" onclick="handleCallback()" style="display: none;">
+                    Complete Auth
+                </button>
+            </div>
+        </div>
+
+        <!-- Token Display Section -->
+        <div class="section" id="tokenSection" style="display: none;">
+            <div class="section-title">Access Token</div>
+            <div class="token-display">
+                <div class="token-display-label">Bearer Token</div>
+                <div id="tokenDisplay">No token received</div>
+                <button class="copy-btn" onclick="copyToken()">Copy</button>
+            </div>
+        </div>
+
+        <!-- Webhook Integration Section -->
+        <div class="section" id="webhookSection" style="display: none;">
+            <div class="section-title">Webhook Integration</div>
+            <div class="form-group">
+                <label for="webhookUrl">Webhook URL (read-only)</label>
+                <input 
+                    type="text" 
+                    id="webhookUrl" 
+                    value="https://n8n.riddler.digital/webhook/yandex-oauth" 
+                    readonly
+                    disabled
+                >
+            </div>
+            <div class="form-group">
+                <label for="retryAttempts">Max Retry Attempts</label>
+                <input 
+                    type="number" 
+                    id="retryAttempts" 
+                    min="1" 
+                    max="10" 
+                    value="3"
+                >
+            </div>
+            <div class="form-group">
+                <label for="retryDelay">Retry Delay (ms)</label>
+                <input 
+                    type="number" 
+                    id="retryDelay" 
+                    min="100" 
+                    max="5000" 
+                    step="100"
+                    value="1000"
+                >
+            </div>
+            <button class="btn-primary" id="sendWebhookBtn" onclick="sendWebhook()">
+                Send Token to Webhook
+            </button>
+        </div>
+
+        <!-- Status Section -->
+        <div class="section" id="statusSection" style="display: none;">
+            <div class="section-title">Integration Status</div>
+            <ul class="status-list" id="statusList"></ul>
+        </div>
+
+        <!-- Actions Section -->
+        <div class="section" id="actionsSection" style="display: none;">
+            <div class="section-title">Actions</div>
+            <div class="button-group">
+                <button class="btn-secondary" id="resetBtn" onclick="resetApp()">
+                    Reset
+                </button>
+                <button class="btn-secondary" id="logoutBtn" onclick="logout()">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            clientId: '513f041567bc4b46a9780a675bb88d5e',
+            yandexAuthUrl: 'https://oauth.yandex.ru/authorize',
+            webhookUrl: 'https://n8n.riddler.digital/webhook/yandex-oauth',
+            storageKey: 'yandex_auth_state',
+            tokenKey: 'yandex_access_token'
+        };
+
+        // State management
+        const state = {
+            token: null,
+            isLoading: false,
+            webhookRetries: 0,
+            maxRetries: 3,
+            retryDelay: 1000
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeRedirectUri();
+            checkAuthCallback();
+            updateUI();
+        });
+
+        // Initialize redirect URI
+        function initializeRedirectUri() {
+            const redirectUri = window.location.origin + window.location.pathname;
+            document.getElementById('redirectUri').value = redirectUri;
+        }
+
+        // Start authentication flow
+        function startAuth() {
+            const redirectUri = window.location.origin + window.location.pathname;
+            const authState = generateRandomState();
+            sessionStorage.setItem(CONFIG.storageKey, authState);
+
+            const params = new URLSearchParams({
+                client_id: CONFIG.clientId,
+                response_type: 'code',
+                state: authState,
+                redirect_uri: redirectUri
+            });
+
+            window.location.href = `${CONFIG.yandexAuthUrl}?${params.toString()}`;
+        }
+
+        // Generate random state for CSRF protection
+        function generateRandomState() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+            let state = '';
+            const values = new Uint8Array(32);
+            crypto.getRandomValues(values);
+            for (let i = 0; i < values.length; i++) {
+                state += chars[values[i] % chars.length];
+            }
+            return state;
+        }
+
+        // Check and handle OAuth callback
+        function checkAuthCallback() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const returnedState = params.get('state');
+            const error = params.get('error');
+            const errorDescription = params.get('error_description');
+
+            if (error) {
+                showAlert('error', 'Authentication Failed', errorDescription || error);
+                return;
+            }
+
+            if (code && returnedState) {
+                const storedState = sessionStorage.getItem(CONFIG.storageKey);
+                
+                if (storedState === returnedState) {
+                    sessionStorage.removeItem(CONFIG.storageKey);
+                    document.getElementById('authBtn').style.display = 'none';
+                    document.getElementById('handleCallbackBtn').style.display = 'block';
+                    // Store code temporarily for manual completion
+                    sessionStorage.setItem('auth_code', code);
+                    showAlert('info', 'Authorization Code Received', 'Click "Complete Auth" to finish the flow.');
+                } else {
+                    showAlert('error', 'Invalid State', 'State mismatch - possible CSRF attack detected');
+                }
+            }
+        }
+
+        // Handle callback completion
+        function handleCallback() {
+            const code = sessionStorage.getItem('auth_code');
+            
+            if (!code) {
+                showAlert('error', 'Missing Code', 'Authorization code not found');
+                return;
+            }
+
+            // Simulate token receipt (in production, backend would exchange code for token)
+            simulateTokenExchange(code);
+        }
+
+        // Simulate token exchange (in production, use backend)
+        function simulateTokenExchange(code) {
+            setLoading(true);
+
+            setTimeout(() => {
+                try {
+                    // Generate a mock token for demonstration
+                    const token = `y0_${generateMockToken()}`;
+                    
+                    // Store in memory (most secure for SPA)
+                    state.token = token;
+                    sessionStorage.setItem(CONFIG.tokenKey, token);
+                    
+                    sessionStorage.removeItem('auth_code');
+                    document.getElementById('handleCallbackBtn').style.display = 'none';
+                    document.getElementById('authBtn').style.display = 'block';
+                    
+                    showAlert('success', 'Authentication Successful', 'Token received and stored securely');
+                    updateUI();
+                    
+                } catch (error) {
+                    showAlert('error', 'Token Exchange Failed', error.message);
+                } finally {
+                    setLoading(false);
+                }
+            }, 1000);
+        }
+
+        // Generate mock token for demonstration
+        function generateMockToken() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-';
+            let token = '';
+            const values = new Uint8Array(48);
+            crypto.getRandomValues(values);
+            for (let i = 0; i < values.length; i++) {
+                token += chars[values[i] % chars.length];
+            }
+            return token;
+        }
+
+        // Send token to webhook with retry logic
+        async function sendWebhook() {
+            if (!state.token) {
+                showAlert('error', 'No Token', 'Please authenticate first');
+                return;
+            }
+
+            const maxRetries = parseInt(document.getElementById('retryAttempts').value);
+            const retryDelay = parseInt(document.getElementById('retryDelay').value);
+
+            setLoading(true);
+            state.webhookRetries = 0;
+            state.maxRetries = maxRetries;
+            state.retryDelay = retryDelay;
+
+            await sendWebhookWithRetry();
+        }
+
+        // Send webhook with exponential backoff retry
+        async function sendWebhookWithRetry() {
+            try {
+                const payload = {
+                    token: state.token,
+                    timestamp: new Date().toISOString(),
+                    clientId: CONFIG.clientId,
+                    scope: 'ya_search'
+                };
+
+                const response = await fetch(CONFIG.webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showAlert('success', 'Webhook Delivered', `Token sent successfully. Response: ${data.message || 'OK'}`);
+                    updateStatusList(true, 'Token delivered to webhook');
+                    setLoading(false);
+                } else if (response.status >= 500 || response.status === 408) {
+                    // Retry on server errors or timeout
+                    if (state.webhookRetries < state.maxRetries) {
+                        state.webhookRetries++;
+                        const delay = state.retryDelay * Math.pow(2, state.webhookRetries - 1); // Exponential backoff
+                        
+                        showAlert('warning', 'Retrying', `Attempt ${state.webhookRetries} of ${state.maxRetries}. Next retry in ${delay}ms`);
+                        
+                        setTimeout(sendWebhookWithRetry, delay);
+                    } else {
+                        showAlert('error', 'Webhook Delivery Failed', `Failed after ${state.maxRetries} retries. Status: ${response.status}`);
+                        updateStatusList(false, `Webhook failed: ${response.status}`);
+                        setLoading(false);
+                    }
+                } else {
+                    // Non-retryable error
+                    const errorText = await response.text();
+                    showAlert('error', 'Webhook Error', `Status ${response.status}: ${errorText}`);
+                    updateStatusList(false, `Webhook error: ${response.status}`);
+                    setLoading(false);
+                }
+            } catch (error) {
+                // Network errors - retry
+                if (state.webhookRetries < state.maxRetries) {
+                    state.webhookRetries++;
+                    const delay = state.retryDelay * Math.pow(2, state.webhookRetries - 1);
+                    
+                    showAlert('warning', 'Network Error', `Retrying... Attempt ${state.webhookRetries} of ${state.maxRetries}`);
+                    
+                    setTimeout(sendWebhookWithRetry, delay);
+                } else {
+                    showAlert('error', 'Network Error', `Connection failed after ${state.maxRetries} retries: ${error.message}`);
+                    updateStatusList(false, 'Network error - webhook failed');
+                    setLoading(false);
+                }
+            }
+        }
+
+        // Copy token to clipboard
+        function copyToken() {
+            if (!state.token) {
+                showAlert('error', 'No Token', 'Token not available');
+                return;
+            }
+
+            navigator.clipboard.writeText(state.token).then(() => {
+                showAlert('success', 'Copied', 'Token copied to clipboard');
+            }).catch(() => {
+                showAlert('error', 'Copy Failed', 'Could not copy token');
+            });
+        }
+
+        // Show alert notification
+        function showAlert(type, title, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+
+            const alertEl = document.createElement('div');
+            alertEl.className = `alert alert-${type}`;
+            alertEl.innerHTML = `
+                <div class="alert-icon">${icons[type]}</div>
+                <div class="alert-content">
+                    <div class="alert-title">${title}</div>
+                    <div>${message}</div>
+                </div>
+            `;
+
+            alertContainer.appendChild(alertEl);
+
+            // Auto-remove after 6 seconds
+            setTimeout(() => {
+                alertEl.style.animation = 'slideIn 300ms ease reverse';
+                setTimeout(() => alertEl.remove(), 300);
+            }, 6000);
+        }
+
+        // Update status list
+        function updateStatusList(success, message) {
+            const statusList = document.getElementById('statusList');
+            const li = document.createElement('li');
+            li.className = success ? 'success' : 'error';
+            li.textContent = message;
+            statusList.appendChild(li);
+
+            // Keep only last 5 items
+            while (statusList.children.length > 5) {
+                statusList.removeChild(statusList.firstChild);
+            }
+        }
+
+        // Update UI based on authentication state
+        function updateUI() {
+            const token = sessionStorage.getItem(CONFIG.tokenKey) || state.token;
+            const isAuthenticated = !!token;
+
+            document.getElementById('statusBadge').className = `status-badge ${isAuthenticated ? 'authenticated' : 'unauthenticated'}`;
+            document.getElementById('statusBadge').textContent = isAuthenticated ? 'Authenticated' : 'Not Authenticated';
+
+            document.getElementById('tokenSection').style.display = isAuthenticated ? 'block' : 'none';
+            document.getElementById('webhookSection').style.display = isAuthenticated ? 'block' : 'none';
+            document.getElementById('statusSection').style.display = isAuthenticated ? 'block' : 'none';
+            document.getElementById('actionsSection').style.display = isAuthenticated ? 'block' : 'none';
+
+            if (isAuthenticated) {
+                state.token = token;
+                const displayToken = token.substring(0, 20) + '...' + token.substring(token.length - 10);
+                document.getElementById('tokenDisplay').textContent = displayToken;
+                updateStatusList(true, 'Authentication token loaded');
+            }
+        }
+
+        // Set loading state
+        function setLoading(loading) {
+            state.isLoading = loading;
+            document.getElementById('authBtn').disabled = loading;
+            document.getElementById('sendWebhookBtn').disabled = loading;
+
+            if (loading) {
+                document.getElementById('authBtn').innerHTML = '<span class="spinner"></span> <span>Processing...</span>';
+                document.getElementById('sendWebhookBtn').innerHTML = '<span class="spinner"></span> <span>Sending...</span>';
+            } else {
+                document.getElementById('authBtn').innerHTML = '<span>Sign In with Yandex</span>';
+                document.getElementById('sendWebhookBtn').innerHTML = 'Send Token to Webhook';
+            }
+        }
+
+        // Reset application
+        function resetApp() {
+            if (confirm('Are you sure? This will clear all authentication data.')) {
+                state.token = null;
+                sessionStorage.removeItem(CONFIG.tokenKey);
+                sessionStorage.removeItem(CONFIG.storageKey);
+                sessionStorage.removeItem('auth_code');
+                document.getElementById('alertContainer').innerHTML = '';
+                document.getElementById('statusList').innerHTML = '';
+                document.getElementById('authBtn').style.display = 'block';
+                document.getElementById('handleCallbackBtn').style.display = 'none';
+                updateUI();
+                showAlert('info', 'Reset Complete', 'Application state cleared');
+            }
+        }
+
+        // Logout
+        function logout() {
+            state.token = null;
+            sessionStorage.removeItem(CONFIG.tokenKey);
+            document.getElementById('alertContainer').innerHTML = '';
+            document.getElementById('statusList').innerHTML = '';
+            document.getElementById('authBtn').style.display = 'block';
+            document.getElementById('handleCallbackBtn').style.display = 'none';
+            updateUI();
+            showAlert('info', 'Logged Out', 'Token cleared successfully');
+        }
+
+        // Handle page visibility to clear memory on tab close (security best practice)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Optional: implement additional security measures
+            }
+        });
+    </script>
+</body>
+</html>

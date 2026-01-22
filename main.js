@@ -128,10 +128,24 @@ async function sendTokenToWebhook(token) {
         }
 
         // Try to parse response if JSON, otherwise assume text ok
-        const data = await response.text(); 
-        console.log('Webhook response:', data);
+        const text = await response.text(); 
+        console.log('Webhook response:', text);
 
-        showSuccess('Integration Successful', 'Token has been securely delivered to the system.');
+        let successMessage = 'Token has been securely delivered to the system.';
+        try {
+            const data = JSON.parse(text);
+            if (data && typeof data === 'object') {
+                successMessage = data.message || data.msg || JSON.stringify(data);
+            } else if (text && text.trim()) {
+                successMessage = text;
+            }
+        } catch (e) {
+            if (text && text.trim()) {
+                successMessage = text;
+            }
+        }
+
+        showSuccess(`Integration Successful (${response.status})`, successMessage);
 
     } catch (error) {
         console.error('Webhook error:', error);

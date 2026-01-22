@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yandex OAuth Token Handler</title>
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    
+    <!-- Preload styles to minimize network delay -->
+    <link rel="preload" href="styles.css" as="fetch" crossorigin="anonymous">
+
+    <style>
+        /* Anti-FOUC: Hide content until styles are loaded */
+        body {
+            opacity: 0;
+            transition: opacity 0.2s ease-in;
+        }
+    </style>
+
     <script>
         // Load styles.css and inject as Tailwind configuration
         fetch('styles.css')
@@ -14,6 +26,19 @@
                 style.type = 'text/tailwindcss';
                 style.textContent = css;
                 document.head.appendChild(style);
+
+                // Reveal body after styles are injected
+                // Double RAF ensures paint cycle has processed the new styles
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        document.body.style.opacity = '1';
+                    });
+                });
+            })
+            .catch(e => {
+                console.error('Failed to load styles:', e);
+                // Fallback: show content anyway so it's not permanently invisible
+                document.body.style.opacity = '1';
             });
     </script>
 </head>

@@ -107,7 +107,7 @@ const app = {
 
         } catch (e) {
             console.error(e);
-            this.showError(`Не удалось отправить данные на Webhook. ${e.error}`);
+            this.showError(`Не удалось отправить данные на Webhook. ${e.message}`);
         }
     },
 

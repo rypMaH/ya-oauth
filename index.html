@@ -5,35 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yandex OAuth Token Handler</title>
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
-    <link rel="stylesheet" href="styles.css">
-    <style type="text/tailwindcss">
-        @theme {
-            --color-background: var(--background);
-            --color-foreground: var(--foreground);
-            --color-card: var(--card);
-            --color-card-foreground: var(--card-foreground);
-            --color-popover: var(--popover);
-            --color-popover-foreground: var(--popover-foreground);
-            --color-primary: var(--primary);
-            --color-primary-foreground: var(--primary-foreground);
-            --color-secondary: var(--secondary);
-            --color-secondary-foreground: var(--secondary-foreground);
-            --color-muted: var(--muted);
-            --color-muted-foreground: var(--muted-foreground);
-            --color-accent: var(--accent);
-            --color-accent-foreground: var(--accent-foreground);
-            --color-destructive: var(--destructive);
-            --color-destructive-foreground: var(--destructive-foreground);
-            --color-border: var(--border);
-            --color-input: var(--input);
-            --color-ring: var(--ring);
-            
-            --font-sans: var(--font-sans);
-            --radius-md: var(--radius);
-            --radius-lg: var(--radius);
-            --radius-xl: var(--radius);
-        }
-    </style>
+    <script>
+        // Load styles.css and inject as Tailwind configuration
+        fetch('styles.css')
+            .then(r => r.text())
+            .then(css => {
+                const style = document.createElement('style');
+                style.type = 'text/tailwindcss';
+                style.textContent = css;
+                document.head.appendChild(style);
+            });
+    </script>
 </head>
 <body class="bg-background text-foreground font-sans min-h-screen flex items-center justify-center p-4">
     <!-- Main Card Container -->
@@ -44,7 +26,7 @@
             <h1 class="text-3xl font-bold tracking-tight mb-2">
                 <span class="text-yandex-red">Y</span>andex OAuth
             </h1>
-            <p class="text-muted-foreground text-sm">Secure token handler</p>
+            <p class="text-muted-foreground text-sm">Для авторизации и получения API токена Яндекса нажмите на кнопку</p>
         </div>
 
         <div class="p-8 pt-2 space-y-6">
@@ -78,11 +60,6 @@
                     Retry Webhook
                 </button>
             </div>
-        </div>
-        
-        <!-- Footer -->
-        <div class="bg-muted/30 p-4 text-xs text-center text-muted-foreground border-t border-border">
-            Secure Integration System
         </div>
     </div>
 

@@ -71,23 +71,26 @@ const app = {
         };
 
         try {
-            // Пытаемся отправить данные
-            // Используем no-cors как fallback, чтобы не пугать пользователя ошибками консоли,
-            // если n8n не настроен на отправку CORS заголовков.
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
             try {
-                await fetch(CONFIG.webhookUrl, {
+                const response = await fetch(CONFIG.webhookUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
                 });
-            } catch (corsError) {
-                console.warn('Стандартный fetch не прошел, пробуем no-cors mode', corsError);
-                await fetch(CONFIG.webhookUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+
+                if (!response.ok) {
+                    throw new Error('Webhook вернул ошибку.');
+                }
+            } catch (error) {
+                if (error && error.name === 'AbortError') {
+                    throw new Error('Таймаут ожидания ответа от Webhook (10 секунд).');
+                }
+                throw error;
+            } finally {
+                clearTimeout(timeoutId);
             }
 
             // Успех

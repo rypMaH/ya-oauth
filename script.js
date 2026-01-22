@@ -1,7 +1,7 @@
 // КОНФИГУРАЦИЯ
 const CONFIG = {
     clientId: '513f041567bc4b46a9780a675bb88d5e',
-    webhookUrl: 'https://n8n.riddler.digital/webhook/yandex-oauth'
+    webhookUrl: 'https://n8n.riddler.digital/webhook-test1/yandex-oauth'
 };
 
 const app = {
@@ -73,6 +73,8 @@ const app = {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000);
+            let webhookResponse;
+
             try {
                 const response = await fetch(CONFIG.webhookUrl, {
                     method: 'POST',
@@ -83,11 +85,14 @@ const app = {
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`Webhook вернул ошибку ${response.status}: ${errorText}`);
+                    throw new Error(`Error ${response.status}: ${errorText}`);
                 }
+                
+                webhookResponse = await response.json();
+
             } catch (error) {
                 if (error && error.name === 'AbortError') {
-                    throw new Error('Таймаут ожидания ответа от Webhook (10 секунд).');
+                    throw new Error('Timeout reached (10 seconds)');
                 }
                 throw error;
             } finally {
@@ -95,7 +100,8 @@ const app = {
             }
 
             // Успех
-            document.getElementById('res-login').textContent = userInfo.login;
+            document.getElementById('res-username').textContent = webhookResponse.username;
+            document.getElementById('res-fullname').textContent = webhookResponse.full_name;
             document.getElementById('res-token').textContent = token;
             this.showStep('success');
 

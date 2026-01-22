@@ -1,7 +1,7 @@
 // КОНФИГУРАЦИЯ
 const CONFIG = {
     clientId: '513f041567bc4b46a9780a675bb88d5e',
-    webhookUrl: 'https://n8n.riddler.digital/webhook-test1/yandex-oauth'
+    webhookUrl: 'https://n8n.riddler.digital/webhook/yandex-oauth'
 };
 
 const app = {

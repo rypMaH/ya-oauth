@@ -143,6 +143,28 @@ async function sendTokenToWebhook(token) {
 /**
  * UI Updates
  */
+const NOTIFICATION_STYLES = {
+    success: {
+        classes: 'bg-green-50 text-green-900 border-green-200',
+        icon: '✅'
+    },
+    error: {
+        classes: 'bg-destructive/10 text-destructive border-destructive/20',
+        icon: '⚠️'
+    }
+};
+
+function showNotification(type, title, message) {
+    const style = NOTIFICATION_STYLES[type];
+    if (!style) return;
+
+    elements.statusContainer.className = `rounded-lg p-4 text-sm border ${style.classes}`;
+    elements.statusIcon.innerHTML = style.icon;
+    elements.statusTitle.textContent = title;
+    elements.statusMessage.textContent = message;
+    elements.statusContainer.classList.remove('hidden');
+}
+
 function showLoading(message) {
     state.status = 'loading';
     
@@ -166,12 +188,7 @@ function showSuccess(title, message) {
     elements.loginBtn.classList.remove('hidden');
     elements.retryBtn.classList.add('hidden');
 
-    // Show status
-    elements.statusContainer.className = 'rounded-lg p-4 text-sm bg-green-50 text-green-900 border border-green-200';
-    elements.statusIcon.innerHTML = '✅';
-    elements.statusTitle.textContent = title;
-    elements.statusMessage.textContent = message;
-    elements.statusContainer.classList.remove('hidden');
+    showNotification('success', title, message);
 }
 
 function showError(title, message) {
@@ -189,12 +206,7 @@ function showError(title, message) {
         elements.retryBtn.classList.add('hidden');
     }
 
-    // Show status
-    elements.statusContainer.className = 'rounded-lg p-4 text-sm bg-destructive/10 text-destructive border border-destructive/20';
-    elements.statusIcon.innerHTML = '⚠️';
-    elements.statusTitle.textContent = title;
-    elements.statusMessage.textContent = message;
-    elements.statusContainer.classList.remove('hidden');
+    showNotification('error', title, message);
 }
 
 function hideStatus() {

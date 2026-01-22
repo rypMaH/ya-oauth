@@ -105,7 +105,26 @@ async function sendTokenToWebhook(token) {
         });
 
         if (!response.ok) {
-            throw new Error(`Webhook returned status: ${response.status}`);
+            let errorMessage = `Webhook returned status: ${response.status}`;
+            try {
+                const text = await response.text();
+                try {
+                    const errorData = JSON.parse(text);
+                    if (errorData && typeof errorData === 'object') {
+                        const code = errorData.code || errorData.statusCode || response.status;
+                        const msg = errorData.message || errorData.error || 'Unknown error';
+                        errorMessage = `Error ${code}: ${msg}`;
+                    }
+                } catch (jsonError) {
+                    // Not JSON, use text content if available and not empty
+                    if (text && text.trim()) {
+                        errorMessage = `Error ${response.status}: ${text.substring(0, 100)}`;
+                    }
+                }
+            } catch (readError) {
+                console.warn('Could not read webhook error response:', readError);
+            }
+            throw new Error(errorMessage);
         }
 
         // Try to parse response if JSON, otherwise assume text ok

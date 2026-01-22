@@ -6,54 +6,83 @@
     <title>Yandex OAuth Token Handler</title>
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="styles.css">
+    <style type="text/tailwindcss">
+        @theme {
+            --color-background: var(--background);
+            --color-foreground: var(--foreground);
+            --color-card: var(--card);
+            --color-card-foreground: var(--card-foreground);
+            --color-popover: var(--popover);
+            --color-popover-foreground: var(--popover-foreground);
+            --color-primary: var(--primary);
+            --color-primary-foreground: var(--primary-foreground);
+            --color-secondary: var(--secondary);
+            --color-secondary-foreground: var(--secondary-foreground);
+            --color-muted: var(--muted);
+            --color-muted-foreground: var(--muted-foreground);
+            --color-accent: var(--accent);
+            --color-accent-foreground: var(--accent-foreground);
+            --color-destructive: var(--destructive);
+            --color-destructive-foreground: var(--destructive-foreground);
+            --color-border: var(--border);
+            --color-input: var(--input);
+            --color-ring: var(--ring);
+            
+            --font-sans: var(--font-sans);
+            --radius-md: var(--radius);
+            --radius-lg: var(--radius);
+            --radius-xl: var(--radius);
+        }
+    </style>
 </head>
 <body class="bg-background text-foreground font-sans min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md space-y-8">
-        <!-- Header -->
-        <div class="text-center">
-            <h1 class="text-3xl font-bold tracking-tight">Yandex OAuth</h1>
-            <p class="mt-2 text-muted-foreground">Secure token handler and webhook integrator</p>
+    <!-- Main Card Container -->
+    <div class="w-full max-w-sm bg-card text-card-foreground rounded-md shadow-sm overflow-hidden border border-border">
+        
+        <!-- Header Section -->
+        <div class="p-8 pb-4 text-center">
+            <h1 class="text-3xl font-bold tracking-tight mb-2">
+                <span class="text-yandex-red">Y</span>andex OAuth
+            </h1>
+            <p class="text-muted-foreground text-sm">Secure token handler</p>
         </div>
 
-        <!-- Main Card -->
-        <div class="bg-card text-card-foreground rounded-xl border border-border shadow-sm overflow-hidden">
-            <div class="p-6 space-y-6">
-                
-                <!-- Status Notification -->
-                <div id="status-container" class="hidden rounded-lg p-4 text-sm" role="alert">
-                    <div class="flex items-center gap-3">
-                        <span id="status-icon" class="text-lg"></span>
-                        <div class="flex-1">
-                            <h3 id="status-title" class="font-medium"></h3>
-                            <p id="status-message" class="text-muted-foreground mt-1"></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Area -->
-                <div id="action-container" class="flex flex-col gap-4">
-                    <!-- Initial State: Login Button -->
-                    <button id="login-btn" class="bg-primary text-primary-foreground hover:opacity-90 h-11 px-8 rounded-md inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 w-full cursor-pointer">
-                        Connect Yandex Account
-                    </button>
-
-                    <!-- Loading State -->
-                    <div id="loading-state" class="hidden flex-col items-center justify-center py-4 space-y-4">
-                        <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        <p class="text-sm text-muted-foreground animate-pulse">Processing authentication...</p>
-                    </div>
-
-                    <!-- Retry Button (Hidden by default) -->
-                    <button id="retry-btn" class="hidden border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 px-8 rounded-md inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors w-full cursor-pointer">
-                        Retry Webhook
-                    </button>
-                </div>
-            </div>
+        <div class="p-8 pt-2 space-y-6">
             
-            <!-- Footer/Info -->
-            <div class="bg-muted/50 p-4 border-t border-border text-xs text-center text-muted-foreground">
-                <p>Tokens are securely passed to the configured webhook.</p>
+            <!-- Status Notification -->
+            <div id="status-container" class="hidden rounded-md p-4 text-sm" role="alert">
+                <div class="flex items-start gap-3">
+                    <span id="status-icon" class="text-lg mt-0.5"></span>
+                    <div class="flex-1">
+                        <h3 id="status-title" class="font-bold"></h3>
+                        <p id="status-message" class="mt-1 opacity-90"></p>
+                    </div>
+                </div>
             </div>
+
+            <!-- Action Area -->
+            <div id="action-container" class="flex flex-col gap-3">
+                <!-- Initial State: Login Button -->
+                <button id="login-btn" class="bg-primary text-primary-foreground hover:bg-[#e6b800] h-12 px-8 rounded-md inline-flex items-center justify-center whitespace-nowrap text-base font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 w-full cursor-pointer shadow-sm">
+                    Connect Yandex Account
+                </button>
+
+                <!-- Loading State -->
+                <div id="loading-state" class="hidden flex-col items-center justify-center py-4 space-y-3">
+                    <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-sm text-muted-foreground">Processing...</p>
+                </div>
+
+                <!-- Retry Button (Hidden by default) -->
+                <button id="retry-btn" class="hidden border border-input bg-white hover:bg-gray-50 text-foreground h-12 px-8 rounded-md inline-flex items-center justify-center whitespace-nowrap text-base font-normal transition-colors w-full cursor-pointer">
+                    Retry Webhook
+                </button>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="bg-muted/30 p-4 text-xs text-center text-muted-foreground border-t border-border">
+            Secure Integration System
         </div>
     </div>
 

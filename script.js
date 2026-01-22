@@ -82,7 +82,8 @@ const app = {
                 });
 
                 if (!response.ok) {
-                    throw new Error('Webhook вернул ошибку.');
+                    const errorText = await response.text();
+                    throw new Error(`Webhook вернул ошибку ${response.status}: ${errorText}`);
                 }
             } catch (error) {
                 if (error && error.name === 'AbortError') {
@@ -100,7 +101,7 @@ const app = {
 
         } catch (e) {
             console.error(e);
-            this.showError('Не удалось отправить данные на Webhook.');
+            this.showError(`Не удалось отправить данные на Webhook. ${e.message}`);
         }
     },
 

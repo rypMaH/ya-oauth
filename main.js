@@ -373,8 +373,10 @@ function showError(title, message) {
     // Show appropriate buttons
     if (state.token) {
         elements.retryBtn.classList.remove('hidden');
-        elements.loginBtn.classList.add('hidden');
+        elements.loginBtn.textContent = 'Connect Another Account';
+        elements.loginBtn.classList.remove('hidden');
     } else {
+        elements.loginBtn.textContent = 'Connect Yandex Account';
         elements.loginBtn.classList.remove('hidden');
         elements.retryBtn.classList.add('hidden');
     }

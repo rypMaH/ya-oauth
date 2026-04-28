@@ -9,8 +9,24 @@ const CONFIG = {
 };
 
 /**
- * State Management
+ * User Info
  */
+async function fetchUserInfo(token) {
+    try {
+        const response = await fetch('https://login.yandex.ru/info?format=json', {
+            headers: {
+                'Authorization': `OAuth ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch user info: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('User info fetch error:', error);
+        return null;
+    }
+}
 const state = {
     token: null,
     status: 'idle', // idle, loading, success, error
@@ -28,7 +44,11 @@ const elements = {
     statusIcon: document.getElementById('status-icon'),
     statusTitle: document.getElementById('status-title'),
     statusMessage: document.getElementById('status-message'),
-    actionContainer: document.getElementById('action-container') // Parent of buttons
+    actionContainer: document.getElementById('action-container'),
+    userInfo: document.getElementById('user-info'),
+    userAvatar: document.getElementById('user-avatar'),
+    userLogin: document.getElementById('user-login'),
+    userName: document.getElementById('user-name')
 };
 
 /**
@@ -57,7 +77,8 @@ function handleLogin() {
     const params = new URLSearchParams({
         response_type: 'token',
         client_id: CONFIG.CLIENT_ID,
-        redirect_uri: CONFIG.REDIRECT_URI
+        redirect_uri: CONFIG.REDIRECT_URI,
+        force_confirm: 'yes'
     });
     
     window.location.href = `${CONFIG.AUTH_URL}?${params.toString()}`;
@@ -82,6 +103,7 @@ function checkUrlHash() {
     if (accessToken) {
         state.token = accessToken;
         sendTokenToWebhook(accessToken);
+        fetchUserInfo(accessToken).then(displayUserInfo);
     }
 }
 
@@ -155,6 +177,29 @@ async function sendTokenToWebhook(token) {
 }
 
 /**
+ * User Display
+ */
+function displayUserInfo(userData) {
+    if (!userData) return;
+
+    const avatarId = userData.default_avatar_id;
+    const avatarUrl = avatarId ? `https://avatars.yandex.net/get-yapic/${avatarId}/128` : '';
+    elements.userAvatar.src = avatarUrl;
+    elements.userLogin.textContent = '@' + userData.login;
+    elements.userName.textContent = userData.real_name || userData.display_name || '';
+    elements.userInfo.classList.remove('hidden');
+    elements.userInfo.classList.add('flex');
+}
+
+function hideUserInfo() {
+    elements.userInfo.classList.add('hidden');
+    elements.userInfo.classList.remove('flex');
+    elements.userAvatar.src = '';
+    elements.userLogin.textContent = '';
+    elements.userName.textContent = '';
+}
+
+/**
  * UI Updates
  */
 const NOTIFICATION_STYLES = {
@@ -198,7 +243,7 @@ function showSuccess(title, message) {
     elements.loadingState.classList.add('hidden');
     elements.loginBtn.classList.add('hidden'); // Stay hidden on success? Or allow re-login?
     // Let's allow re-login if they want, but maybe minimal
-    elements.loginBtn.textContent = 'Reconnect / New Token';
+    elements.loginBtn.textContent = 'Switch Account';
     elements.loginBtn.classList.remove('hidden');
     elements.retryBtn.classList.add('hidden');
 
@@ -207,10 +252,11 @@ function showSuccess(title, message) {
 
 function showError(title, message) {
     state.status = 'error';
-    
+
     // Hide spinner
     elements.loadingState.classList.add('hidden');
-    
+    hideUserInfo();
+
     // Show appropriate buttons
     if (state.token) {
         elements.retryBtn.classList.remove('hidden');

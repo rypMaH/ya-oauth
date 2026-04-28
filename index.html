@@ -70,9 +70,18 @@
 
             <!-- Action Area -->
             <div id="action-container" class="flex flex-col gap-3 items-center">
+                <!-- User Info (Hidden by default) -->
+                <div id="user-info" class="hidden flex-col items-center gap-3 py-2">
+                    <img id="user-avatar" src="" alt="Avatar" class="w-16 h-16 rounded-full border-2 border-border object-cover bg-muted">
+                    <div class="text-center">
+                        <p id="user-login" class="font-semibold text-foreground"></p>
+                        <p id="user-name" class="text-sm text-muted-foreground"></p>
+                    </div>
+                </div>
+
                 <!-- Initial State: Login Button -->
                 <button id="login-btn" class="bg-primary text-primary-foreground hover:bg-[#e6b800] h-12 px-8 rounded-md inline-flex items-center justify-center whitespace-nowrap text-base font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 w-3/4 cursor-pointer shadow-sm">
-                    Connect
+                    Connect / Switch Account
                 </button>
 
                 <!-- Loading State -->

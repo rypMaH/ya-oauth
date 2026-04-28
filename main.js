@@ -48,7 +48,11 @@ const elements = {
     userInfo: document.getElementById('user-info'),
     userAvatar: document.getElementById('user-avatar'),
     userLogin: document.getElementById('user-login'),
-    userName: document.getElementById('user-name')
+    userName: document.getElementById('user-name'),
+    accountSelectorBtn: document.getElementById('account-selector-btn'),
+    accountsDropdown: document.getElementById('accounts-dropdown'),
+    accountsList: document.getElementById('accounts-list'),
+    addAccountBtn: document.getElementById('add-account-btn')
 };
 
 /**
@@ -56,16 +60,45 @@ const elements = {
  */
 function init() {
     setupEventListeners();
+    renderAccounts();
     checkUrlHash();
 }
 
 function setupEventListeners() {
-    elements.loginBtn.addEventListener('click', handleLogin);
+    elements.loginBtn.addEventListener('click', () => {
+        if (state.token && JSON.parse(localStorage.getItem('yandex_accounts') || '[]').length > 0) {
+            sendTokenToWebhook(state.token);
+        } else {
+            handleLogin();
+        }
+    });
+    
     elements.retryBtn.addEventListener('click', () => {
         if (state.token) {
             sendTokenToWebhook(state.token);
         } else {
             handleLogin();
+        }
+    });
+
+    if (elements.accountSelectorBtn) {
+        elements.accountSelectorBtn.addEventListener('click', () => {
+            elements.accountsDropdown.classList.toggle('hidden');
+            elements.accountsDropdown.classList.toggle('flex');
+        });
+    }
+
+    if (elements.addAccountBtn) {
+        elements.addAccountBtn.addEventListener('click', () => {
+            handleLogin();
+        });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (elements.userInfo && !elements.userInfo.contains(e.target)) {
+            elements.accountsDropdown?.classList.add('hidden');
+            elements.accountsDropdown?.classList.remove('flex');
         }
     });
 }
@@ -78,13 +111,13 @@ function handleLogin() {
         response_type: 'token',
         client_id: CONFIG.CLIENT_ID,
         redirect_uri: CONFIG.REDIRECT_URI,
-        force_confirm: 'yes'
+        force_confirm: 'yes' // Forces account selection/confirmation in Yandex
     });
     
     window.location.href = `${CONFIG.AUTH_URL}?${params.toString()}`;
 }
 
-function checkUrlHash() {
+async function checkUrlHash() {
     const hash = window.location.hash.substring(1); // Remove #
     if (!hash) return;
 
@@ -102,8 +135,16 @@ function checkUrlHash() {
 
     if (accessToken) {
         state.token = accessToken;
-        sendTokenToWebhook(accessToken);
-        fetchUserInfo(accessToken).then(displayUserInfo);
+        showLoading('Fetching user info...');
+        const userData = await fetchUserInfo(accessToken);
+        
+        if (userData) {
+            saveAccount(userData, accessToken);
+            renderAccounts();
+            sendTokenToWebhook(accessToken);
+        } else {
+            showError('User Info Failed', 'Could not fetch user information from Yandex.');
+        }
     }
 }
 
@@ -177,26 +218,93 @@ async function sendTokenToWebhook(token) {
 }
 
 /**
- * User Display
+ * User Display & Accounts Management
  */
-function displayUserInfo(userData) {
-    if (!userData) return;
-
+function saveAccount(userData, token) {
+    const accounts = JSON.parse(localStorage.getItem('yandex_accounts') || '[]');
     const avatarId = userData.default_avatar_id;
     const avatarUrl = avatarId ? `https://avatars.yandex.net/get-yapic/${avatarId}/128` : '';
-    elements.userAvatar.src = avatarUrl;
-    elements.userLogin.textContent = '@' + userData.login;
-    elements.userName.textContent = userData.real_name || userData.display_name || '';
-    elements.userInfo.classList.remove('hidden');
-    elements.userInfo.classList.add('flex');
+    const newAccount = {
+        id: userData.id,
+        login: userData.login,
+        name: userData.real_name || userData.display_name || '',
+        avatarUrl,
+        token
+    };
+    
+    const existingIndex = accounts.findIndex(a => a.id === userData.id);
+    if (existingIndex >= 0) {
+        accounts[existingIndex] = newAccount;
+    } else {
+        accounts.push(newAccount);
+    }
+    
+    localStorage.setItem('yandex_accounts', JSON.stringify(accounts));
+    localStorage.setItem('active_yandex_account', userData.id);
 }
 
-function hideUserInfo() {
-    elements.userInfo.classList.add('hidden');
-    elements.userInfo.classList.remove('flex');
-    elements.userAvatar.src = '';
-    elements.userLogin.textContent = '';
-    elements.userName.textContent = '';
+function renderAccounts() {
+    const accounts = JSON.parse(localStorage.getItem('yandex_accounts') || '[]');
+    const activeId = localStorage.getItem('active_yandex_account');
+    
+    if (accounts.length === 0) {
+        elements.userInfo.classList.add('hidden');
+        elements.userInfo.classList.remove('flex');
+        elements.loginBtn.classList.remove('hidden');
+        elements.loginBtn.textContent = 'Connect Yandex Account';
+        return;
+    }
+    
+    const activeAccount = accounts.find(a => a.id === activeId) || accounts[0];
+    localStorage.setItem('active_yandex_account', activeAccount.id);
+    state.token = activeAccount.token;
+
+    // Update active account display
+    if (activeAccount.avatarUrl) {
+        elements.userAvatar.src = activeAccount.avatarUrl;
+        elements.userAvatar.classList.remove('hidden');
+    } else {
+        elements.userAvatar.classList.add('hidden');
+    }
+    elements.userLogin.textContent = '@' + activeAccount.login;
+    elements.userName.textContent = activeAccount.name;
+    
+    elements.userInfo.classList.remove('hidden');
+    elements.userInfo.classList.add('flex');
+    
+    // Update dropdown list
+    elements.accountsList.innerHTML = '';
+    accounts.forEach(acc => {
+        if (acc.id === activeAccount.id) return; // Skip active one
+        
+        const btn = document.createElement('button');
+        btn.className = 'w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left border-b border-border last:border-0';
+        
+        const imgHtml = acc.avatarUrl 
+            ? `<img src="${acc.avatarUrl}" alt="Avatar" class="w-8 h-8 rounded-full border border-border object-cover bg-muted shrink-0">`
+            : `<div class="w-8 h-8 rounded-full border border-border bg-muted shrink-0"></div>`;
+            
+        btn.innerHTML = `
+            ${imgHtml}
+            <div class="flex-1 min-w-0">
+                <p class="font-medium text-foreground text-sm truncate">@${acc.login}</p>
+                <p class="text-xs text-muted-foreground truncate">${acc.name}</p>
+            </div>
+        `;
+        
+        btn.addEventListener('click', () => {
+            localStorage.setItem('active_yandex_account', acc.id);
+            elements.accountsDropdown.classList.add('hidden');
+            elements.accountsDropdown.classList.remove('flex');
+            renderAccounts();
+            sendTokenToWebhook(acc.token);
+        });
+        
+        elements.accountsList.appendChild(btn);
+    });
+
+    elements.loginBtn.classList.remove('hidden');
+    elements.loginBtn.textContent = 'Send Selected Token';
 }
 
 /**
@@ -241,11 +349,17 @@ function showSuccess(title, message) {
     
     // Hide spinner
     elements.loadingState.classList.add('hidden');
-    elements.loginBtn.classList.add('hidden'); // Stay hidden on success? Or allow re-login?
-    // Let's allow re-login if they want, but maybe minimal
-    elements.loginBtn.textContent = 'Switch Account';
-    elements.loginBtn.classList.remove('hidden');
     elements.retryBtn.classList.add('hidden');
+
+    const hasAccounts = JSON.parse(localStorage.getItem('yandex_accounts') || '[]').length > 0;
+    
+    if (hasAccounts) {
+        elements.loginBtn.textContent = 'Send Selected Token';
+        elements.loginBtn.classList.remove('hidden');
+    } else {
+        elements.loginBtn.textContent = 'Connect Yandex Account';
+        elements.loginBtn.classList.remove('hidden');
+    }
 
     showNotification('success', title, message);
 }
@@ -255,7 +369,6 @@ function showError(title, message) {
 
     // Hide spinner
     elements.loadingState.classList.add('hidden');
-    hideUserInfo();
 
     // Show appropriate buttons
     if (state.token) {

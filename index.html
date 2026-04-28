@@ -71,17 +71,36 @@
             <!-- Action Area -->
             <div id="action-container" class="flex flex-col gap-3 items-center">
                 <!-- User Info (Hidden by default) -->
-                <div id="user-info" class="hidden flex-col items-center gap-3 py-2">
-                    <img id="user-avatar" src="" alt="Avatar" class="w-16 h-16 rounded-full border-2 border-border object-cover bg-muted">
-                    <div class="text-center">
-                        <p id="user-login" class="font-semibold text-foreground"></p>
-                        <p id="user-name" class="text-sm text-muted-foreground"></p>
+                <div id="user-info" class="hidden flex-col items-center gap-3 py-2 w-full">
+                    <div class="relative flex flex-col items-center w-full max-w-[220px]">
+                        <!-- Account Selector Button -->
+                        <button id="account-selector-btn" class="w-full flex items-center gap-3 p-2 rounded-md border border-border bg-card hover:bg-muted transition-colors text-left focus:outline-none focus:ring-2 focus:ring-ring">
+                            <img id="user-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full border border-border object-cover bg-muted shrink-0">
+                            <div class="flex-1 min-w-0">
+                                <p id="user-login" class="font-semibold text-foreground text-sm truncate"></p>
+                                <p id="user-name" class="text-xs text-muted-foreground truncate"></p>
+                            </div>
+                            <svg class="w-4 h-4 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+
+                        <!-- Accounts Dropdown List (Hidden by default) -->
+                        <div id="accounts-dropdown" class="hidden absolute top-full left-0 w-full mt-1 bg-card border border-border rounded-md shadow-lg overflow-hidden flex-col z-50">
+                            <div id="accounts-list" class="max-h-40 overflow-y-auto flex flex-col">
+                                <!-- Accounts will be injected here -->
+                            </div>
+                            <div class="border-t border-border">
+                                <button id="add-account-btn" class="w-full flex items-center gap-2 p-3 text-sm text-primary hover:bg-muted transition-colors text-left font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    Добавить аккаунт
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Initial State: Login Button -->
                 <button id="login-btn" class="bg-primary text-primary-foreground hover:bg-[#e6b800] h-12 px-8 rounded-md inline-flex items-center justify-center whitespace-nowrap text-base font-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 w-3/4 cursor-pointer shadow-sm">
-                    Connect / Switch Account
+                    Connect Yandex Account
                 </button>
 
                 <!-- Loading State -->

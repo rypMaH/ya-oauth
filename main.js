@@ -44,15 +44,7 @@ const elements = {
     statusIcon: document.getElementById('status-icon'),
     statusTitle: document.getElementById('status-title'),
     statusMessage: document.getElementById('status-message'),
-    actionContainer: document.getElementById('action-container'),
-    userInfo: document.getElementById('user-info'),
-    userAvatar: document.getElementById('user-avatar'),
-    userLogin: document.getElementById('user-login'),
-    userName: document.getElementById('user-name'),
-    accountSelectorBtn: document.getElementById('account-selector-btn'),
-    accountsDropdown: document.getElementById('accounts-dropdown'),
-    accountsList: document.getElementById('accounts-list'),
-    addAccountBtn: document.getElementById('add-account-btn')
+    actionContainer: document.getElementById('action-container')
 };
 
 /**
@@ -60,17 +52,12 @@ const elements = {
  */
 function init() {
     setupEventListeners();
-    renderAccounts();
     checkUrlHash();
 }
 
 function setupEventListeners() {
     elements.loginBtn.addEventListener('click', () => {
-        if (state.token && JSON.parse(localStorage.getItem('yandex_accounts') || '[]').length > 0) {
-            sendTokenToWebhook(state.token);
-        } else {
-            handleLogin();
-        }
+        handleLogin();
     });
     
     elements.retryBtn.addEventListener('click', () => {
@@ -78,27 +65,6 @@ function setupEventListeners() {
             sendTokenToWebhook(state.token);
         } else {
             handleLogin();
-        }
-    });
-
-    if (elements.accountSelectorBtn) {
-        elements.accountSelectorBtn.addEventListener('click', () => {
-            elements.accountsDropdown.classList.toggle('hidden');
-            elements.accountsDropdown.classList.toggle('flex');
-        });
-    }
-
-    if (elements.addAccountBtn) {
-        elements.addAccountBtn.addEventListener('click', () => {
-            handleLogin();
-        });
-    }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (elements.userInfo && !elements.userInfo.contains(e.target)) {
-            elements.accountsDropdown?.classList.add('hidden');
-            elements.accountsDropdown?.classList.remove('flex');
         }
     });
 }
@@ -139,8 +105,6 @@ async function checkUrlHash() {
         const userData = await fetchUserInfo(accessToken);
         
         if (userData) {
-            saveAccount(userData, accessToken);
-            renderAccounts();
             sendTokenToWebhook(accessToken);
         } else {
             showError('User Info Failed', 'Could not fetch user information from Yandex.');
@@ -218,96 +182,6 @@ async function sendTokenToWebhook(token) {
 }
 
 /**
- * User Display & Accounts Management
- */
-function saveAccount(userData, token) {
-    const accounts = JSON.parse(localStorage.getItem('yandex_accounts') || '[]');
-    const avatarId = userData.default_avatar_id;
-    const avatarUrl = avatarId ? `https://avatars.yandex.net/get-yapic/${avatarId}/128` : '';
-    const newAccount = {
-        id: userData.id,
-        login: userData.login,
-        name: userData.real_name || userData.display_name || '',
-        avatarUrl,
-        token
-    };
-    
-    const existingIndex = accounts.findIndex(a => a.id === userData.id);
-    if (existingIndex >= 0) {
-        accounts[existingIndex] = newAccount;
-    } else {
-        accounts.push(newAccount);
-    }
-    
-    localStorage.setItem('yandex_accounts', JSON.stringify(accounts));
-    localStorage.setItem('active_yandex_account', userData.id);
-}
-
-function renderAccounts() {
-    const accounts = JSON.parse(localStorage.getItem('yandex_accounts') || '[]');
-    const activeId = localStorage.getItem('active_yandex_account');
-    
-    if (accounts.length === 0) {
-        elements.userInfo.classList.add('hidden');
-        elements.userInfo.classList.remove('flex');
-        elements.loginBtn.classList.remove('hidden');
-        elements.loginBtn.textContent = 'Connect Yandex Account';
-        return;
-    }
-    
-    const activeAccount = accounts.find(a => a.id === activeId) || accounts[0];
-    localStorage.setItem('active_yandex_account', activeAccount.id);
-    state.token = activeAccount.token;
-
-    // Update active account display
-    if (activeAccount.avatarUrl) {
-        elements.userAvatar.src = activeAccount.avatarUrl;
-        elements.userAvatar.classList.remove('hidden');
-    } else {
-        elements.userAvatar.classList.add('hidden');
-    }
-    elements.userLogin.textContent = '@' + activeAccount.login;
-    elements.userName.textContent = activeAccount.name;
-    
-    elements.userInfo.classList.remove('hidden');
-    elements.userInfo.classList.add('flex');
-    
-    // Update dropdown list
-    elements.accountsList.innerHTML = '';
-    accounts.forEach(acc => {
-        if (acc.id === activeAccount.id) return; // Skip active one
-        
-        const btn = document.createElement('button');
-        btn.className = 'w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left border-b border-border last:border-0';
-        
-        const imgHtml = acc.avatarUrl 
-            ? `<img src="${acc.avatarUrl}" alt="Avatar" class="w-8 h-8 rounded-full border border-border object-cover bg-muted shrink-0">`
-            : `<div class="w-8 h-8 rounded-full border border-border bg-muted shrink-0"></div>`;
-            
-        btn.innerHTML = `
-            ${imgHtml}
-            <div class="flex-1 min-w-0">
-                <p class="font-medium text-foreground text-sm truncate">@${acc.login}</p>
-                <p class="text-xs text-muted-foreground truncate">${acc.name}</p>
-            </div>
-        `;
-        
-        btn.addEventListener('click', () => {
-            localStorage.setItem('active_yandex_account', acc.id);
-            elements.accountsDropdown.classList.add('hidden');
-            elements.accountsDropdown.classList.remove('flex');
-            renderAccounts();
-            sendTokenToWebhook(acc.token);
-        });
-        
-        elements.accountsList.appendChild(btn);
-    });
-
-    elements.loginBtn.classList.remove('hidden');
-    elements.loginBtn.textContent = 'Send Selected Token';
-}
-
-/**
  * UI Updates
  */
 const NOTIFICATION_STYLES = {
@@ -351,15 +225,9 @@ function showSuccess(title, message) {
     elements.loadingState.classList.add('hidden');
     elements.retryBtn.classList.add('hidden');
 
-    const hasAccounts = JSON.parse(localStorage.getItem('yandex_accounts') || '[]').length > 0;
-    
-    if (hasAccounts) {
-        elements.loginBtn.textContent = 'Send Selected Token';
-        elements.loginBtn.classList.remove('hidden');
-    } else {
-        elements.loginBtn.textContent = 'Connect Yandex Account';
-        elements.loginBtn.classList.remove('hidden');
-    }
+    // Show login button again so they can auth another account
+    elements.loginBtn.textContent = 'Connect Another Account';
+    elements.loginBtn.classList.remove('hidden');
 
     showNotification('success', title, message);
 }
